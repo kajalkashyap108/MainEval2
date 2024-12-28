@@ -107,29 +107,32 @@
 
 
     function displayBooks(books, isBorrowed = false) {
-      booksContainer.innerHTML = "";
-      books.forEach((book) => {
-        const bookCard = document.createElement("div");
-        bookCard.className = "book-card";
-        bookCard.innerHTML = `
-          <h4>${book.title}</h4>
-          <img src="${book.imageURL}" alt="${book.title}">
-          <p><strong>Author:</strong> ${book.author}</p>
-          <p><strong>Category:</strong> ${book.category}</p>
-          <p><strong>Status:</strong> ${book.isAvailable ? "Available" : "Borrowed"}</p>
-          <p><strong>Borrowed Days:</strong> ${book.borrowedDays || "N/A"}</p>
-          <button class="borrow-button" ${!book.isAvailable ? "disabled" : ""} onclick="borrowBook(${book.id})">
-            Borrow Book
-          </button>
-          ${isBorrowed ? `
-            <button class="return-button" onclick="returnBook(${book.id})">
-              Return Book
-            </button>
-          ` : ""}
-        `;
-        booksContainer.appendChild(bookCard);
-      });
-    }
+  booksContainer.innerHTML = "";
+  books.forEach((book) => {
+    const bookCard = document.createElement("div");
+    bookCard.className = "book-card";
+    bookCard.innerHTML = `
+      <h4>${book.title}</h4>
+      <img src="${book.imageURL}" alt="${book.title}">
+      <p><strong>Author:</strong> ${book.author}</p>
+      <p><strong>Category:</strong> ${book.category}</p>
+      <p><strong>Status:</strong> ${book.isAvailable ? "Available" : "Borrowed"}</p>
+      <p><strong>Borrowed Days:</strong> ${book.borrowedDays || "N/A"}</p>
+      ${!isBorrowed ? `
+        <button class="borrow-button" ${!book.isAvailable ? "disabled" : ""} onclick="borrowBook(${book.id})">
+          Borrow Book
+        </button>
+      ` : ""}
+      ${isBorrowed ? `
+        <button class="return-button" onclick="returnBook(${book.id})">
+          Return Book
+        </button>
+      ` : ""}
+    `;
+    booksContainer.appendChild(bookCard);
+  });
+}
+
 
     async function borrowBook(bookId) {
       const borrowedDays = prompt("Enter borrowing duration (1 to 10 days):");

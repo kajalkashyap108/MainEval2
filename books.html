@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Book Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .buttons-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+    .buttons-container button {
+      margin: 0 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .books-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .book-card {
+      background: #fff;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      text-align: center;
+    }
+    .book-card img {
+      width: 100%;
+      border-radius: 5px;
+    }
+    .book-card button {
+      margin-top: 10px;
+      padding: 10px;
+      width: 100%;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .borrow-button {
+      background-color: #28a745;
+      color: white;
+    }
+    .return-button {
+      background-color: #dc3545;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>User Book Page</h2>
+    <div class="buttons-container">
+      <button onclick="showAvailableBooks()">Show Available Books</button>
+      <button onclick="showBorrowedBooks()">Show Borrowed Books</button>
+    </div>
+    <div class="books-container" id="books-container"></div>
+  </div>
+
+  <script>
+    const loginData = JSON.parse(localStorage.getItem("loginData"));
+    if (!loginData || loginData.email !== "user@empher.com") {
+      alert("User Not Logged In.");
+      window.location.href = "index.html";
+    }
+
+    const API_URL = "https://maineval2back.onrender.com/api/books"; // Backend URL
+    const booksContainer = document.getElementById("books-container");
+
+
+    async function showAvailableBooks() {
+      const response = await fetch(API_URL);
+      const books = await response.json();
+      const availableBooks = books.filter(book => book.isAvailable);
+      displayBooks(availableBooks);
+    }
+
+   
+    async function showBorrowedBooks() {
+      const response = await fetch(API_URL);
+      const books = await response.json();
+      const borrowedBooks = books.filter(book => !book.isAvailable);
+      displayBooks(borrowedBooks, true);
+    }
+
+
+    function displayBooks(books, isBorrowed = false) {
+      booksContainer.innerHTML = "";
+      books.forEach((book) => {
+        const bookCard = document.createElement("div");
+        bookCard.className = "book-card";
+        bookCard.innerHTML = `
+          <h4>${book.title}</h4>
+          <img src="${book.imageURL}" alt="${book.title}">
+          <p><strong>Author:</strong> ${book.author}</p>
+          <p><strong>Category:</strong> ${book.category}</p>
+          <p><strong>Status:</strong> ${book.isAvailable ? "Available" : "Borrowed"}</p>
+          <p><strong>Borrowed Days:</strong> ${book.borrowedDays || "N/A"}</p>
+          <button class="borrow-button" ${!book.isAvailable ? "disabled" : ""} onclick="borrowBook(${book.id})">
+            Borrow Book
+          </button>
+          ${isBorrowed ? `
+            <button class="return-button" onclick="returnBook(${book.id})">
+              Return Book
+            </button>
+          ` : ""}
+        `;
+        booksContainer.appendChild(bookCard);
+      });
+    }
+
+    async function borrowBook(bookId) {
+      const borrowedDays = prompt("Enter borrowing duration (1 to 10 days):");
+      if (borrowedDays < 1 || borrowedDays > 10) {
+        alert("Duration should be between 1 and 10 days.");
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/${bookId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          isAvailable: false, 
+          borrowedDays: parseInt(borrowedDays) 
+        })
+      });
+
+      if (response.ok) {
+        alert("Book Borrowed Successfully.");
+        showAvailableBooks(); 
+      }
+    }
+
+    
+    async function returnBook(bookId) {
+      const response = await fetch(`${API_URL}/${bookId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          isAvailable: true,
+          borrowedDays: null 
+        })
+      });
+
+      if (response.ok) {
+        alert("Book Returned Successfully.");
+        showBorrowedBooks(); 
+      }
+    }
+
+
+    showAvailableBooks();
+  </script>
+</body>
+</html>
